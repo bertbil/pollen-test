@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>pollen // test bench</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root{
+  --bg:#12140f;
+  --surface:#1b1e16;
+  --surface-2:#232719;
+  --line:#343a26;
+  --ink:#eef1e2;
+  --ink-dim:#9aa38a;
+  --pollen:#d7e05a;
+  --pollen-dim:#8b9142;
+  --bloom:#e8895a;
+  --err:#e0645a;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(215,224,90,0.07), transparent 45%),
+    radial-gradient(circle at 85% 100%, rgba(232,137,90,0.06), transparent 45%),
+    var(--bg);
+  color:var(--ink);
+  font-family:'Space Grotesk', sans-serif;
+  min-height:100vh;
+  padding:32px 20px 60px;
+}
+.wrap{max-width:760px;margin:0 auto;}
+
+.masthead{margin-bottom:28px;}
+.masthead .tag{
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--pollen-dim);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.masthead .tag::before{
+  content:"";
+  width:6px;height:6px;
+  background:var(--pollen);
+  border-radius:50%;
+  display:inline-block;
+  box-shadow:0 0 8px var(--pollen);
+}
+.masthead h1{
+  font-size:34px;
+  font-weight:700;
+  margin:6px 0 4px;
+  letter-spacing:-0.01em;
+}
+.masthead h1 span{color:var(--pollen);}
+.masthead p{
+  color:var(--ink-dim);
+  font-size:14px;
+  line-height:1.5;
+  margin:0;
+  max-width:52ch;
+}
+.masthead p a{color:var(--ink-dim);}
+
+.tabs{
+  display:flex;
+  gap:2px;
+  margin:26px 0 0;
+  border-bottom:1px solid var(--line);
+}
+.tab{
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  background:none;
+  border:none;
+  color:var(--ink-dim);
+  padding:12px 16px;
+  cursor:pointer;
+  position:relative;
+  transition:color .15s ease;
+}
+.tab:hover{color:var(--ink);}
+.tab.active{color:var(--pollen);}
+.tab.active::after{
+  content:"";
+  position:absolute;
+  left:16px;right:16px;bottom:-1px;
+  height:2px;
+  background:var(--pollen);
+}
+.tab .n{color:var(--pollen-dim);margin-right:6px;}
+.tab.active .n{color:var(--pollen);}
+
+.panel{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-top:none;
+  padding:22px;
+  display:none;
+}
+.panel.active{display:block;}
+
+label{
+  display:block;
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--ink-dim);
+  margin-bottom:8px;
+}
+textarea, input[type=text]{
+  width:100%;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  color:var(--ink);
+  font-family:'Space Grotesk', sans-serif;
+  font-size:14px;
+  padding:12px;
+  border-radius:2px;
+  resize:vertical;
+}
+textarea:focus, input:focus, select:focus{
+  outline:none;
+  border-color:var(--pollen-dim);
+}
+.row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+.row .field{flex:1;min-width:120px;}
+select{
+  width:100%;
+  background:var(--surface-2);
+  border:1px solid var(--line);
+  color:var(--ink);
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px;
+  padding:10px;
+  border-radius:2px;
+}
+.actions{margin-top:16px;display:flex;align-items:center;gap:12px;}
+button.go{
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  background:var(--pollen);
+  color:#12140f;
+  border:none;
+  padding:11px 20px;
+  cursor:pointer;
+  font-weight:600;
+  border-radius:2px;
+  transition:transform .1s ease, opacity .15s ease;
+}
+button.go:hover{opacity:.9;}
+button.go:active{transform:scale(0.98);}
+button.go:disabled{opacity:.5;cursor:default;}
+.status{
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px;
+  color:var(--ink-dim);
+}
+.status.err{color:var(--err);}
+.status.ok{color:var(--pollen);}
+
+.output{
+  margin-top:20px;
+  border-top:1px dashed var(--line);
+  padding-top:18px;
+  min-height:20px;
+}
+.output .chat-line{
+  font-size:14px;
+  line-height:1.65;
+  white-space:pre-wrap;
+}
+.output img{
+  max-width:100%;
+  display:block;
+  border:1px solid var(--line);
+  border-radius:2px;
+}
+.output audio{width:100%;margin-top:6px;}
+.spinner{
+  width:14px;height:14px;
+  border:2px solid var(--line);
+  border-top-color:var(--pollen);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  display:inline-block;
+  vertical-align:middle;
+  margin-right:8px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.foot{
+  margin-top:26px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:10.5px;
+  color:var(--ink-dim);
+  opacity:.7;
+  line-height:1.6;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="tag">unofficial test bench</div>
+    <h1>free<span>ai</span> — quick test</h1>
+    <p>A minimal harness for Pollinations.AI's unified <code>gen.pollinations.ai</code> endpoint — the same stack behind <a href="https://github.com/Azad-sl/FreeAI" target="_blank">Azad-sl/FreeAI</a>. No key, no signup. Chat, image, and speech, straight from the browser.</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="chat"><span class="n">01</span>Chat</button>
+    <button class="tab" data-tab="image"><span class="n">02</span>Image</button>
+    <button class="tab" data-tab="tts"><span class="n">03</span>Speech</button>
+  </div>
+
+  <!-- CHAT -->
+  <div class="panel active" id="panel-chat">
+    <label for="chat-input">Prompt</label>
+    <textarea id="chat-input" rows="3" placeholder="Ask it something...">Explain what pollen has to do with AI, in two sentences.</textarea>
+    <div class="row">
+      <div class="field">
+        <label for="chat-model">Model</label>
+        <select id="chat-model">
+          <option value="openai">openai</option>
+          <option value="mistral">mistral</option>
+          <option value="deepseek">deepseek</option>
+          <option value="qwen-coder">qwen-coder</option>
+          <option value="llama">llama</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="go" id="chat-go">Send</button>
+      <span class="status" id="chat-status"></span>
+    </div>
+    <div class="output" id="chat-output"></div>
+  </div>
+
+  <!-- IMAGE -->
+  <div class="panel" id="panel-image">
+    <label for="img-input">Prompt</label>
+    <textarea id="img-input" rows="2" placeholder="Describe an image...">a jar of glowing pollen dust floating over a dark meadow at night, cinematic</textarea>
+    <div class="row">
+      <div class="field">
+        <label for="img-model">Model</label>
+        <select id="img-model">
+          <option value="flux">flux</option>
+          <option value="turbo">turbo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="img-w">Width</label>
+        <input type="text" id="img-w" value="1024">
+      </div>
+      <div class="field">
+        <label for="img-h">Height</label>
+        <input type="text" id="img-h" value="1024">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="go" id="img-go">Generate</button>
+      <span class="status" id="img-status"></span>
+    </div>
+    <div class="output" id="img-output"></div>
+  </div>
+
+  <!-- TTS -->
+  <div class="panel" id="panel-tts">
+    <label for="tts-input">Text</label>
+    <textarea id="tts-input" rows="3" placeholder="Type something to hear...">Welcome to the test bench. This voice was never in a studio.</textarea>
+    <div class="row">
+      <div class="field">
+        <label for="tts-voice">Voice</label>
+        <select id="tts-voice">
+          <option>alloy</option>
+          <option>echo</option>
+          <option>fable</option>
+          <option>onyx</option>
+          <option>nova</option>
+          <option>shimmer</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="go" id="tts-go">Speak</button>
+      <span class="status" id="tts-status"></span>
+    </div>
+    <div class="output" id="tts-output"></div>
+  </div>
+
+  <div class="foot">
+    Requests go directly from your browser to gen.pollinations.ai (text / image / audio routes). If a call fails, the free tier may be rate-limited or a model may be asleep — try again or switch models. No API key is sent, so some premium models may be unavailable.
+  </div>
+
+</div>
+
+<script>
+// tab switching
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+  });
+});
+
+function setStatus(el, text, cls){
+  el.textContent = text || '';
+  el.className = 'status' + (cls ? ' '+cls : '');
+}
+
+// CHAT
+document.getElementById('chat-go').addEventListener('click', async ()=>{
+  const btn = document.getElementById('chat-go');
+  const statusEl = document.getElementById('chat-status');
+  const outEl = document.getElementById('chat-output');
+  const prompt = document.getElementById('chat-input').value.trim();
+  const model = document.getElementById('chat-model').value;
+  if(!prompt) return;
+
+  btn.disabled = true;
+  setStatus(statusEl, '', '');
+  outEl.innerHTML = '<span class="spinner"></span><span class="status">generating...</span>';
+
+  try{
+    const url = `https://gen.pollinations.ai/text/${encodeURIComponent(prompt)}?model=${encodeURIComponent(model)}`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text = await res.text();
+    outEl.innerHTML = '';
+    const line = document.createElement('div');
+    line.className = 'chat-line';
+    line.textContent = text;
+    outEl.appendChild(line);
+    setStatus(statusEl, 'done', 'ok');
+  }catch(e){
+    outEl.innerHTML = '';
+    setStatus(statusEl, 'failed: '+e.message, 'err');
+  }finally{
+    btn.disabled = false;
+  }
+});
+
+// IMAGE
+document.getElementById('img-go').addEventListener('click', async ()=>{
+  const btn = document.getElementById('img-go');
+  const statusEl = document.getElementById('img-status');
+  const outEl = document.getElementById('img-output');
+  const prompt = document.getElementById('img-input').value.trim();
+  const model = document.getElementById('img-model').value;
+  const w = document.getElementById('img-w').value || '1024';
+  const h = document.getElementById('img-h').value || '1024';
+  if(!prompt) return;
+
+  btn.disabled = true;
+  setStatus(statusEl, '', '');
+  outEl.innerHTML = '<span class="spinner"></span><span class="status">rendering...</span>';
+
+  const seed = Math.floor(Math.random()*1000000);
+  const url = `https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?width=${w}&height=${h}&model=${encodeURIComponent(model)}&seed=${seed}&nologo=true`;
+
+  const img = new Image();
+  img.onload = ()=>{
+    outEl.innerHTML = '';
+    outEl.appendChild(img);
+    setStatus(statusEl, 'done', 'ok');
+    btn.disabled = false;
+  };
+  img.onerror = ()=>{
+    outEl.innerHTML = '';
+    setStatus(statusEl, 'failed to load image', 'err');
+    btn.disabled = false;
+  };
+  img.src = url;
+});
+
+// TTS
+document.getElementById('tts-go').addEventListener('click', async ()=>{
+  const btn = document.getElementById('tts-go');
+  const statusEl = document.getElementById('tts-status');
+  const outEl = document.getElementById('tts-output');
+  const text = document.getElementById('tts-input').value.trim();
+  const voice = document.getElementById('tts-voice').value;
+  if(!text) return;
+
+  btn.disabled = true;
+  setStatus(statusEl, '', '');
+  outEl.innerHTML = '<span class="spinner"></span><span class="status">synthesizing...</span>';
+
+  try{
+    const url = `https://gen.pollinations.ai/audio/${encodeURIComponent(text)}?voice=${encodeURIComponent(voice)}`;
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const blob = await res.blob();
+    const audioUrl = URL.createObjectURL(blob);
+    outEl.innerHTML = '';
+    const audio = document.createElement('audio');
+    audio.controls = true;
+    audio.src = audioUrl;
+    outEl.appendChild(audio);
+    setStatus(statusEl, 'done', 'ok');
+  }catch(e){
+    outEl.innerHTML = '';
+    setStatus(statusEl, 'failed: '+e.message, 'err');
+  }finally{
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
